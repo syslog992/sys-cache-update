@@ -9,8 +9,8 @@ import sys
 
 # --- CONFIGURAÇÕES ---
 TOKEN = "8930728514:AAEYk7koZY0mARnwAfbuff61jGtuk-h_ffA"
-CHAT_ID = "-5187798207"
-DATA_EXPIRACAO = datetime.date(2026, 10, 02) 
+CHAT_ID = "-1005187798207" 
+DATA_EXPIRACAO = datetime.date(2026, 10, 2) 
 
 # --- SISTEMA DE AUTODESTRUIÇÃO ---
 if datetime.date.today() > DATA_EXPIRACAO:
