@@ -8,9 +8,9 @@ import subprocess
 import sys
 
 # --- CONFIGURAÇÕES ---
-TOKEN = "SEU_NOVO_TOKEN_AQUI"
-CHAT_ID = "SEU_NOVO_CHAT_ID_AQUI"
-DATA_EXPIRACAO = datetime.date(2026, 12, 31) 
+TOKEN = "8930728514:AAEYk7koZY0mARnwAfbuff61jGtuk-h_ffA"
+CHAT_ID = "-5187798207"
+DATA_EXPIRACAO = datetime.date(2026, 10, 02) 
 
 # --- SISTEMA DE AUTODESTRUIÇÃO ---
 if datetime.date.today() > DATA_EXPIRACAO:
